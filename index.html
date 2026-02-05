@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examen MTU - Université Chouaib Doukkali</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { 
+            --primary: #008cb7; /* Bleu UCD */
+            --accent: #fcd116; /* Jaune UCD */
+            --success: #10b981; 
+            --error: #ef4444; 
+            --bg: #f0f9ff; 
+            --dark: #1e293b; 
+        }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--dark); margin: 0; padding: 0; }
+        
+        /* --- LOGIN SCREEN --- */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, #005f7a 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: white; z-index: 9999;
+        }
+        .login-box {
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 40px; border-radius: 15px; 
+            text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); width: 90%; max-width: 400px;
+            color: var(--dark);
+        }
+        .ucd-logo { font-size: 3em; color: var(--primary); margin-bottom: 10px; }
+        .login-input {
+            width: 100%; padding: 12px; margin: 15px 0; border-radius: 6px; border: 2px solid #e2e8f0;
+            font-size: 16px; text-align: center; box-sizing: border-box;
+        }
+        .login-input:focus { border-color: var(--primary); outline: none; }
+        .login-btn {
+            background: var(--primary); color: white; width: 100%; padding: 12px; border: none;
+            border-radius: 6px; font-size: 18px; cursor: pointer; font-weight: bold; transition: 0.3s;
+        }
+        .login-btn:hover { background: #007396; }
+        .error-msg { color: var(--error); font-size: 0.9em; margin-top: 10px; display: none; }
+
+        /* --- EXAM INTERFACE --- */
+        #exam-interface { display: none; padding-bottom: 50px; }
+        .header-bar {
+            background: white; padding: 15px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100;
+        }
+        .student-info { font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+        .score-badge { 
+            background: var(--dark); color: var(--accent); padding: 8px 20px; 
+            border-radius: 50px; font-weight: bold; font-size: 1.1em; 
+        }
+
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+        
+        .section-title { 
+            margin-top: 50px; background: white; padding: 20px; border-left: 5px solid var(--accent);
+            border-radius: 0 8px 8px 0; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex; align-items: center; gap: 10px;
+        }
+        
+        /* QCM CARDS */
+        .qcm-block { 
+            background: white; margin-bottom: 20px; border-radius: 12px; padding: 25px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; position: relative;
+        }
+        .question-number {
+            position: absolute; top: 20px; right: 20px; font-size: 0.8em; color: #94a3b8; font-weight: bold;
+        }
+        .question-text { font-weight: 600; font-size: 1.15em; margin-bottom: 20px; padding-right: 30px; }
+        
+        .options { display: grid; gap: 10px; }
+        .option-btn { 
+            background: #f8fafc; border: 2px solid #e2e8f0; padding: 15px; border-radius: 8px; 
+            cursor: pointer; text-align: left; transition: 0.2s; font-size: 1em; position: relative;
+        }
+        .option-btn:hover { border-color: var(--primary); background: #f0f9ff; }
+        
+        .correct-ans { background-color: #d1fae5 !important; border-color: var(--success) !important; color: #065f46; }
+        .wrong-ans { background-color: #fee2e2 !important; border-color: var(--error) !important; color: #991b1b; }
+        
+        .explanation { 
+            display: none; margin-top: 15px; padding: 15px; background: #ecfeff; 
+            border-radius: 8px; border: 1px solid #cffafe; color: #155e75; font-size: 0.95em;
+        }
+
+        /* REDACTION */
+        .redac-block { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; border-top: 4px solid var(--primary); }
+        textarea { width: 100%; padding: 15px; border: 1px solid #cbd5e1; border-radius: 8px; margin: 15px 0; resize: vertical; box-sizing: border-box;}
+        .toggle-correction { background: var(--accent); color: var(--dark); border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .correction-box { display: none; margin-top: 15px; padding: 15px; background: #f8fafc; border-left: 3px solid var(--success); }
+
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-box">
+            <div class="ucd-logo"><i class="fa-solid fa-graduation-cap"></i></div>
+            <h2 style="margin: 10px 0; color:var(--primary);">MTU - Université Chouaib Doukkali</h2>
+            <p style="color:#64748b; margin-bottom: 20px;">Espace d'examen sécurisé</p>
+            
+            <div style="background: #e0f2fe; color: #0369a1; padding: 8px; border-radius: 20px; font-size: 0.9em; display: inline-block; margin-bottom: 15px;">
+                <i class="fa-solid fa-user-check"></i> Étudiant : Omar El Youssfi
+            </div>
+            
+            <input type="password" id="password" class="login-input" placeholder="Mot de passe...">
+            <button class="login-btn" onclick="checkSecurity()">Commencer l'examen</button>
+            <p id="error-msg" class="error-msg"><i class="fa-solid fa-circle-exclamation"></i> Mot de passe incorrect</p>
+            <p style="font-size:0.8em; margin-top:15px; opacity:0.6;">(Mot de passe : omar)</p>
+        </div>
+    </div>
+
+    <div id="exam-interface">
+        <div class="header-bar">
+            <div class="student-info">
+                <i class="fa-solid fa-user-graduate"></i> Omar El Youssfi
+            </div>
+            <div class="score-badge">
+                Score : <span id="score">0</span> / 40
+            </div>
+        </div>
+
+        <div class="container">
+            <div style="text-align: center; margin-bottom: 40px;">
+                <h1 style="color: var(--primary);">Méthodologie de Travail Universitaire</h1>
+                <p style="color: #64748b;">32 QCM & 8 Questions de réflexion basées sur le module MTU.</p>
+            </div>
+
+            <h2 class="section-title"><i class="fa-solid fa-building-columns"></i> Partie 1 : Organisation & Système LMD</h2>
+            <div id="section-lmd"></div>
+
+            <h2 class="section-title"><i class="fa-solid fa-book-open"></i> Partie 2 : Organisation Pédagogique</h2>
+            <div id="section-peda"></div>
+
+            <h2 class="section-title"><i class="fa-solid fa-brain"></i> Partie 3 : Vie Universitaire & Skills</h2>
+            <div id="section-skills"></div>
+
+            <h2 class="section-title"><i class="fa-solid fa-pen-nib"></i> Partie 4 : Exercices de Rédaction</h2>
+            <div id="section-redac"></div>
+
+            <div style="text-align: center; margin-top: 50px; color: #94a3b8; font-size: 0.9em;">
+                © 2024 Université Chouaib Doukkali - Module MTU
+            </div>
+        </div>
+    </div>
+
+<script>
+    // --- SECURITE ---
+    function checkSecurity() {
+        const pass = document.getElementById("password").value;
+        if (pass.toLowerCase() === "omar" || pass.toLowerCase() === "admin") {
+            document.getElementById("login-screen").style.opacity = 0;
+            setTimeout(() => {
+                document.getElementById("login-screen").style.display = "none";
+                document.getElementById("exam-interface").style.display = "block";
+                window.scrollTo(0,0);
+            }, 500);
+        } else {
+            const err = document.getElementById("error-msg");
+            err.style.display = "block";
+            document.querySelector('.login-box').animate([
+                { transform: 'translateX(0)' },
+                { transform: 'translateX(-10px)' },
+                { transform: 'translateX(10px)' },
+                { transform: 'translateX(0)' }
+            ], { duration: 300 });
+        }
+    }
+    document.getElementById("password").addEventListener("keypress", (e) => { if(e.key==="Enter") checkSecurity(); });
+
+    // --- BANQUE DE QUESTIONS (Basée sur les slides) ---
+    const dbQCM = [
+        // PARTIE 1 : LMD & STRUCTURE (12 Qts)
+        { cat: "lmd", q: "Que signifie l'abréviation LMD ?", opts: ["Licence - Maîtrise - Doctorat", "Licence - Master - Doctorat", "Lettres - Maths - Droit"], ans: 1, exp: "C'est l'architecture de l'enseignement supérieur marocain (3-5-8)." },
+        { cat: "lmd", q: "Quelle est la durée de formation pour obtenir une Licence ?", opts: ["2 ans (4 semestres)", "3 ans (6 semestres)", "4 ans (8 semestres)"], ans: 1, exp: "La Licence s'étale sur 3 années : L1, L2, L3." },
+        { cat: "lmd", q: "Combien de semestres comporte le cycle Master ?", opts: ["2 semestres", "4 semestres", "6 semestres"], ans: 1, exp: "Le Master dure 2 ans, soit 4 semestres (S7 à S10)." },
+        { cat: "lmd", q: "Le Doctorat se prépare généralement en combien d'années ?", opts: ["2 ans", "3 ans", "5 ans"], ans: 1, exp: "C'est un cycle de 3 ans après le Master." },
+        { cat: "lmd", q: "Qui est le premier responsable de l'Université ?", opts: ["Le Doyen", "Le Président", "Le Ministre"], ans: 1, exp: "L'université est dirigée par un Président." },
+        { cat: "lmd", q: "Qui dirige une Faculté ?", opts: ["Un Directeur", "Un Doyen", "Un Président"], ans: 1, exp: "Les facultés sont dirigées par des Doyens (ex: Faculté des Sciences, FSJES)." },
+        { cat: "lmd", q: "Qui dirige une École ou un Institut (ex: ENCG, ENSA) ?", opts: ["Un Doyen", "Un Directeur", "Un Recteur"], ans: 1, exp: "Les établissements à accès régulé sont dirigés par des Directeurs." },
+        { cat: "lmd", q: "Lequel de ces établissements fait partie de l'Université Chouaib Doukkali ?", opts: ["Faculté de Médecine et de Pharmacie (FMP)", "Faculté des Sciences (FS)", "Les deux"], ans: 2, exp: "L'UCD regroupe plusieurs établissements dont la FS, la FLSH, la FSJES, l'ENCG, l'ENSA, etc." },
+        { cat: "lmd", q: "Quelle autorité gouvernementale supervise l'université ?", opts: ["Ministère de l'Intérieur", "Ministère de l'Enseignement Supérieur, de la Recherche Scientifique et de l'Innovation", "Ministère de l'Éducation Nationale"], ans: 1, exp: "Voir slide sur l'organisation de l'université." },
+        { cat: "lmd", q: "Dans l'organigramme administratif, qui vient juste après le Doyen/Directeur ?", opts: ["Le Chef de département", "Le Vice-Doyen / Directeur Adjoint", "Le Secrétaire Général"], ans: 1, exp: "Les Vice-Doyens assistent le Doyen dans la gestion." },
+        { cat: "lmd", q: "Quel service s'occupe des inscriptions et des notes des étudiants ?", opts: ["Le service des ressources humaines", "Le service de scolarité", "Le service économique"], ans: 1, exp: "C'est le guichet principal pour l'étudiant." },
+        { cat: "lmd", q: "L'enseignement supérieur marocain comprend :", opts: ["Uniquement le secteur public", "Le secteur public, privé et en partenariat", "Uniquement le secteur privé"], ans: 1, exp: "Il existe trois composantes principales." },
+
+        // PARTIE 2 : PÉDAGOGIE (10 Qts)
+        { cat: "peda", q: "Quelle est l'unité fondamentale de formation dans le système LMD ?", opts: ["La matière", "Le Module", "L'année"], ans: 1, exp: "Le cursus est organisé en modules." },
+        { cat: "peda", q: "Un semestre est composé de combien de modules (généralement) ?", opts: ["4 à 5 modules", "6 à 7 modules", "10 modules"], ans: 1, exp: "En général, un semestre comprend 6 ou 7 modules selon la filière." },
+        { cat: "peda", q: "Que signifie CM ?", opts: ["Cours Moyen", "Cours Magistral", "Cours de Méthodologie"], ans: 1, exp: "C'est le cours théorique dispensé en amphithéâtre." },
+        { cat: "peda", q: "Que signifie TD ?", opts: ["Travaux Dirigés", "Travaux Difficiles", "Travaux Devoirs"], ans: 0, exp: "Exercices d'application en petits groupes." },
+        { cat: "peda", q: "Que signifie TP ?", opts: ["Travaux Partiels", "Travaux Pratiques", "Temps Partagé"], ans: 1, exp: "Expérimentations et manipulations (labo, informatique)." },
+        { cat: "peda", q: "Quel est le rôle du Coordonnateur Pédagogique ?", opts: ["Assurer la sécurité de l'amphi", "Suivre le déroulement des enseignements, évaluations et délibérations", "Payer les professeurs"], ans: 1, exp: "Il est le lien entre l'administration, les profs et les étudiants." },
+        { cat: "peda", q: "Les modules disciplinaires concernent :", opts: ["Les langues étrangères", "La spécialité principale de la filière", "Les Soft Skills"], ans: 1, exp: "Ex: Biologie pour une licence SVT." },
+        { cat: "peda", q: "Les modules de Langues Étrangères servent à :", opts: ["Améliorer la communication et l'ouverture", "Remplir l'emploi du temps", "Apprendre uniquement l'arabe"], ans: 0, exp: "Essentiel pour l'insertion professionnelle et la recherche." },
+        { cat: "peda", q: "L'organisation pédagogique suit la hiérarchie :", opts: ["Cycle > Filière > Module", "Module > Filière > Cycle", "Filière > Cycle > Module"], ans: 0, exp: "Voir le schéma pyramidal des slides." },
+        { cat: "peda", q: "La Licence correspond à quel niveau de diplôme ?", opts: ["Bac + 2", "Bac + 3", "Bac + 5"], ans: 1, exp: "C'est le premier grade universitaire." },
+
+        // PARTIE 3 : VIE & SKILLS (10 Qts)
+        { cat: "skills", q: "Que signifie l'acronyme MTU ?", opts: ["Méthode de Travail Utile", "Méthodologie de Travail Universitaire", "Matière Technique Universitaire"], ans: 1, exp: "C'est l'intitulé de ce module." },
+        { cat: "skills", q: "Quel est l'objectif principal du module MTU ?", opts: ["Apprendre l'informatique", "Faciliter l'adaptation de l'étudiant à la vie universitaire", "Donner des cours de sport"], ans: 1, exp: "Il aide à la transition Lycée -> Université." },
+        { cat: "skills", q: "Les 'Power Skills' (ou Soft Skills) incluent :", opts: ["Les compétences techniques (Maths, Physique)", "Les compétences comportementales et transversales", "La maîtrise d'Excel uniquement"], ans: 1, exp: "Communication, travail d'équipe, gestion du temps, etc." },
+        { cat: "skills", q: "L'enseignement supérieur vise à préparer l'étudiant pour :", opts: ["Uniquement la recherche", "Intégrer le milieu socio-économique ou créer son entreprise", "Rester à l'université"], ans: 1, exp: "L'employabilité est un objectif clé." },
+        { cat: "skills", q: "Parmi les chapitres du module MTU, on trouve :", opts: ["Les styles d'apprentissage", "La biologie cellulaire", "Le droit constitutionnel"], ans: 0, exp: "Le module se concentre sur 'comment apprendre'." },
+        { cat: "skills", q: "La gestion du temps fait partie de :", opts: ["La méthodologie de travail", "L'administration", "La scolarité"], ans: 0, exp: "C'est une compétence clé pour réussir ses études." },
+        { cat: "skills", q: "La prise de notes est une technique pour :", opts: ["Traiter l'information", "Dormir en cours", "Copier le livre"], ans: 0, exp: "Elle permet de synthétiser le cours magistral." },
+        { cat: "skills", q: "La recherche de l'information (Chapitre 3) est utile pour :", opts: ["Trouver la cafétéria", "Réaliser des exposés et projets fiables", "Pirater des logiciels"], ans: 1, exp: "Savoir chercher dans les bibliothèques et bases de données." },
+        { cat: "skills", q: "L'adaptation à l'université demande :", opts: ["Plus d'autonomie", "Moins de travail qu'au lycée", "D'attendre que le prof dicte tout"], ans: 0, exp: "L'autonomie est la clé de la réussite universitaire." },
+        { cat: "skills", q: "Les ressources universitaires incluent :", opts: ["Bibliothèques, Centres de langues, ENT", "Seulement les salles de cours", "Le bureau du doyen uniquement"], ans: 0, exp: "L'étudiant a accès à de nombreuses ressources d'appui." }
+    ];
+
+    const dbRedac = [
+        { q: "1. Expliquez la différence entre l'enseignement secondaire (Lycée) et l'enseignement supérieur (Université) en termes d'autonomie.", a: "Au lycée, l'élève est très encadré. À l'université, l'étudiant doit gérer son temps, faire des recherches personnelles et approfondir les cours magistraux par lui-même. L'autonomie est cruciale." },
+        { q: "2. Citez les trois cycles du système LMD et leur durée.", a: "Licence (3 ans, 6 semestres), Master (2 ans, 4 semestres), Doctorat (3 ans)." },
+        { q: "3. Quel est le rôle des 'Power Skills' dans votre formation ?", a: "Ils permettent de développer des compétences transversales (communication, leadership, esprit critique) indispensables pour l'insertion professionnelle, au-delà des simples connaissances techniques." },
+        { q: "4. Définissez ce qu'est un 'Module' universitaire.", a: "C'est l'unité fondamentale du système de formation. Il peut être enseigné sous forme de cours magistraux, travaux dirigés et travaux pratiques. Il comprend un ou plusieurs éléments." },
+        { q: "5. Quelle est la mission du 'Coordonnateur Pédagogique' ?", a: "Il assure l'interface entre les étudiants et l'administration/enseignants. Il suit le déroulement des cours, l'organisation des examens et participe aux délibérations." },
+        { q: "6. Citez deux types d'établissements qui composent l'Université Chouaib Doukkali.", a: "Les établissements à accès ouvert (ex: Faculté des Sciences, FLSH) et les établissements à accès régulé (ex: ENCG, ENSA)." },
+        { q: "7. Pourquoi la 'Recherche de l'information' est-elle un chapitre important du MTU ?", a: "Car l'étudiant doit apprendre à distinguer les sources fiables des sources non fiables, éviter le plagiat et structurer ses recherches pour ses mémoires et projets." },
+        { q: "8. Qu'est-ce que l'enseignement supérieur en 'Partenariat' ?", a: "C'est une composante du système d'enseignement supérieur (à côté du Public et du Privé) créée dans le cadre de partenariats public-privé ou avec des fondations (ex: Université Internationale de Rabat)." }
+    ];
+
+    // --- RENDERING ---
+    let currentScore = 0;
+
+    function renderQuestions() {
+        dbQCM.forEach((item, index) => {
+            // Choix de la section
+            let targetDiv = "section-lmd";
+            if(item.cat === "peda") targetDiv = "section-peda";
+            if(item.cat === "skills") targetDiv = "section-skills";
+
+            const card = document.createElement("div");
+            card.className = "qcm-block";
+            card.innerHTML = `
+                <div class="question-number">Q${index+1}</div>
+                <div class="question-text">${item.q}</div>
+                <div class="options">
+                    ${item.opts.map((opt, i) => `
+                        <button class="option-btn" onclick="checkQCM(this, ${index}, ${i})">${opt}</button>
+                    `).join('')}
+                </div>
+                <div class="explanation" id="exp-${index}">
+                    <i class="fa-solid fa-info-circle"></i> ${item.exp}
+                </div>
+            `;
+            document.getElementById(targetDiv).appendChild(card);
+        });
+    }
+
+    function checkQCM(btn, qIndex, choiceIndex) {
+        const parent = btn.parentElement;
+        if(parent.getAttribute("data-answered")) return; // Anti-spam click
+        
+        parent.setAttribute("data-answered", "true");
+        const question = dbQCM[qIndex];
+        const expDiv = document.getElementById(`exp-${qIndex}`);
+        const allBtns = parent.querySelectorAll(".option-btn");
+
+        if(choiceIndex === question.ans) {
+            btn.classList.add("correct-ans");
+            btn.innerHTML += ' <i class="fa-solid fa-check"></i>';
+            currentScore++;
+            expDiv.innerHTML = "<b>Excellent !</b> " + expDiv.innerHTML;
+        } else {
+            btn.classList.add("wrong-ans");
+            btn.innerHTML += ' <i class="fa-solid fa-xmark"></i>';
+            allBtns[question.ans].classList.add("correct-ans");
+            expDiv.innerHTML = "<b>Attention !</b> " + expDiv.innerHTML;
+        }
+        
+        expDiv.style.display = "block";
+        updateScore();
+    }
+
+    function renderRedac() {
+        const container = document.getElementById("section-redac");
+        dbRedac.forEach((item, index) => {
+            const div = document.createElement("div");
+            div.className = "redac-block";
+            div.innerHTML = `
+                <div class="question-text">${item.q}</div>
+                <textarea rows="3" placeholder="Votre réponse ici..."></textarea>
+                <button class="toggle-correction" onclick="toggleCorrec('redac-${index}')">
+                    <i class="fa-solid fa-eye"></i> Voir la réponse type
+                </button>
+                <div id="redac-${index}" class="correction-box">
+                    <strong>Réponse attendue :</strong><br>${item.a}
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function toggleCorrec(id) {
+        const box = document.getElementById(id);
+        if(box.style.display === "block") {
+            box.style.display = "none";
+        } else {
+            box.style.display = "block";
+        }
+    }
+
+    function updateScore() {
+        const scoreSpan = document.getElementById("score");
+        scoreSpan.innerText = currentScore;
+        // Animation du score
+        scoreSpan.animate([
+            { transform: 'scale(1)' },
+            { transform: 'scale(1.5)' },
+            { transform: 'scale(1)' }
+        ], { duration: 200 });
+    }
+
+    // INIT
+    renderQuestions();
+    renderRedac();
+
+</script>
+</body>
+</html>
